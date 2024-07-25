@@ -19,8 +19,8 @@ class User(Base):
     certification = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False)
 
-    course_review = relationship("Course_Review", back_populates="users")
-    timetable = relationship("Timetable", back_populates="users")
+    course_review = relationship("Course_Review", back_populates="user")
+    timetable = relationship("Timetable", back_populates="user")
 
 class Course_Review(Base):
     __tablename__ = "course_review"
@@ -31,8 +31,8 @@ class Course_Review(Base):
     rating = Column(Integer, nullable=False)
     content = Column(String, nullable=False)
 
-    user = relationship("User", back_populates="course_reviews")
-    course = relationship("Course", back_populates="course_reviews")
+    user = relationship("User", back_populates="course_review")
+    course = relationship("Course", back_populates="course_review")
 
 class Course(Base):
     __tablename__ = "course"
@@ -49,8 +49,8 @@ class Course(Base):
     end_time = Column(DateTime, nullable=False)
     course_room = Column(String, nullable=False)
 
-    course_review = relationship("Course_Review", back_populates="courses")
-    course_timetable = relationship("Course_Timetable", back_populates="courses")
+    course_review = relationship("Course_Review", back_populates="course")
+    course_timetable = relationship("Course_Timetable", back_populates="course")
 
 class Timetable(Base):
     __tablename__ = "timetable"
@@ -59,8 +59,8 @@ class Timetable(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
     name = Column(String, nullable=False)
 
-    user = relationship("User", back_populates="timetables")
-    course_timetable = relationship("Course_Timetable", back_populates="timetables")
+    user = relationship("User", back_populates="timetable")
+    course_timetable = relationship("Course_Timetable", back_populates="timetable")
 
 class Course_Timetable(Base):
     __tablename__ = "course_timetable"
@@ -69,5 +69,5 @@ class Course_Timetable(Base):
     timetable_id = Column(Integer, ForeignKey("timetable.id"), nullable=False)
     course_id = Column(Integer, ForeignKey("course.id"), nullable=False)
 
-    timetable = relationship("Timetable", back_populates="course_timetables")
-    course = relationship("Course", back_populates="course_timetables")
+    timetable = relationship("Timetable", back_populates="course_timetable")
+    course = relationship("Course", back_populates="course_timetable")

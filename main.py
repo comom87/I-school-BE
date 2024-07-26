@@ -1,9 +1,19 @@
-from fastapi import FastAPI, Query, Body, HTTPException
+from typing import Optional, Any
+
+from fastapi import FastAPI, Query, Body, Request
+from pydantic import BaseModel
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import JSONResponse
+
 from models import *
+from domain.timetable import timetable_schema
 from database import SessionLocal
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import and_, or_
+
+from domain.timetable import timetable_router
+from utils import UvicornException, http_exception_handler
 
 app = FastAPI()
 
@@ -14,10 +24,15 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True, 
-    allow_methods=["*"],     
-    allow_headers=["*"],     
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+
+app.include_router(timetable_router.router)
+
+app.add_exception_handler(UvicornException, http_exception_handler)
 
 session = SessionLocal()
 
@@ -32,83 +47,75 @@ async def say_hello_name(name: str):
     return {"message": f"Hello {name}"}
 
 
-
 @app.post('/api/v1/course-timetables')
-async def postCourseToTimetable(userId : int = Body(...,embed=True),
-               timetableId : int = Body(...,embed=True),
-               code : str = Body(...,embed=True)):
-    
-
+async def postCourseToTimetable(userId: int = Body(..., embed=True),
+                                timetableId: int = Body(..., embed=True),
+                                code: str = Body(..., embed=True)):
     # code로 courseId 찾기
     course = session.query(Course.id).filter(Course.code == code).all()
     if not course:
         return {
-            "success" : False,
-            "data" : "Invalid code",
-            "error" : None    
-            }
-
+            "success": False,
+            "data": "Invalid code",
+            "error": None
+        }
 
     timetable = session.query(Timetable).filter(Timetable.id == timetableId).first()
     if not timetable:
         return {
-            "success" : False,
-            "data" : "Invalid timetable_id",
-            "error" : None    
-            }
-    
+            "success": False,
+            "data": "Invalid timetable_id",
+            "error": None
+        }
 
     for courseId in course:
         courses = Course_Timetable()
         courses.timetable_id = timetableId
         courses.course_id = courseId[0]
 
-        try :
+        try:
             session.add(courses)
             session.commit()
             session.refresh(courses)
 
         except SQLAlchemyError as e:
             return {
-                "success" : False,
-                "data" : None,
-                "error" : e
+                "success": False,
+                "data": None,
+                "error": e
             }
-        
-    return{
-        "success" : True,
-        "data" : None,
-        "error" : None  
+
+    return {
+        "success": True,
+        "data": None,
+        "error": None
     }
 
-@app.delete('/api/v1/course-timetables')
-async def deleteCourseFromTimetable(userId : int = Body(...,embed=True),
-               timetableId : int = Body(...,embed=True),
-               code : str = Body(...,embed=True)):
-    
 
+@app.delete('/api/v1/course-timetables')
+async def deleteCourseFromTimetable(userId: int = Body(..., embed=True),
+                                    timetableId: int = Body(..., embed=True),
+                                    code: str = Body(..., embed=True)):
     # code로 courseId 찾기
     course = session.query(Course.id).filter(Course.code == code).all()
     if not course:
         return {
-            "success" : False,
-            "data" : "Invalid code",
-            "error" : None    
-            }
-
+            "success": False,
+            "data": "Invalid code",
+            "error": None
+        }
 
     timetable = session.query(Timetable).filter(Timetable.id == timetableId).first()
     if not timetable:
         return {
-            "success" : False,
-            "data" : "Invalid timetable_id",
-            "error" : None    
-            }
-    
+            "success": False,
+            "data": "Invalid timetable_id",
+            "error": None
+        }
 
     for courseId in course:
 
-        try :
+        try:
             courseId[0]
             session.query(Course_Timetable).filter(and_(
                 Course_Timetable.course_id == courseId[0],
@@ -117,23 +124,21 @@ async def deleteCourseFromTimetable(userId : int = Body(...,embed=True),
 
         except SQLAlchemyError as e:
             return {
-                "success" : False,
-                "data" : None,
-                "error" : e
+                "success": False,
+                "data": None,
+                "error": e
             }
-        
-    return{
-        "success" : True,
-        "data" : None,
-        "error" : None  
+
+    return {
+        "success": True,
+        "data": None,
+        "error": None
     }
 
 
 @app.get('/api/v1/courses')
 async def getCourses(major: str, keyword: str, grade: str):
-
     try:
-
 
         # 먼저 키워드에 맞는 교수를 확인
         course_check = session.query(Course).filter(
@@ -143,7 +148,6 @@ async def getCourses(major: str, keyword: str, grade: str):
             )
         ).all()
 
-        
         # 키워드에 맞는 교수가 없으면 오류 메시지 반환
         if not course_check:
             return {
@@ -155,8 +159,7 @@ async def getCourses(major: str, keyword: str, grade: str):
             }
 
         # 키워드가 맞는 경우, major와 grade를 기준으로 필터링
-       # Course와 CourseReview 테이블을 join하여 조건에 맞는 데이터를 가져옴
-        
+        # Course와 CourseReview 테이블을 join하여 조건에 맞는 데이터를 가져옴
 
         courses = session.query(
             Course.id,
@@ -180,7 +183,6 @@ async def getCourses(major: str, keyword: str, grade: str):
                 )
             )
         ).all()
-
 
         # 데이터를 변환하여 응답 형식에 맞게 변경
         course_list = [
@@ -207,11 +209,10 @@ async def getCourses(major: str, keyword: str, grade: str):
             },
             "error": None
         }
-        
+
     except SQLAlchemyError as e:
         return {
             "success": False,
             "data": None,
             "error": e
         }
-    

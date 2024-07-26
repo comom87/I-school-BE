@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Time
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -19,10 +19,10 @@ class User(Base):
     certification = Column(String, nullable=True)
     created_at = Column(DateTime, nullable=False)
 
-    course_review = relationship("Course_Review", back_populates="user")
+    course_review = relationship("CourseReview", back_populates="user")
     timetable = relationship("Timetable", back_populates="user")
 
-class Course_Review(Base):
+class CourseReview(Base):
     __tablename__ = "course_review"
 
     id = Column(Integer, primary_key=True)
@@ -45,12 +45,12 @@ class Course(Base):
     grade = Column(Integer, nullable=False)
     credit = Column(Integer, nullable=False)
     day = Column(String, nullable=False)
-    start_time = Column(DateTime, nullable=False)
-    end_time = Column(DateTime, nullable=False)
+    start_time = Column(Time, nullable=False)
+    end_time = Column(Time, nullable=False)
     course_room = Column(String, nullable=False)
 
-    course_review = relationship("Course_Review", back_populates="course")
-    course_timetable = relationship("Course_Timetable", back_populates="course")
+    course_review = relationship("CourseReview", back_populates="course")
+    course_timetable = relationship("CourseTimetable", back_populates="course")
 
 class Timetable(Base):
     __tablename__ = "timetable"
@@ -60,9 +60,9 @@ class Timetable(Base):
     name = Column(String, nullable=False)
 
     user = relationship("User", back_populates="timetable")
-    course_timetable = relationship("Course_Timetable", back_populates="timetable")
+    course_timetable = relationship("CourseTimetable", back_populates="timetable")
 
-class Course_Timetable(Base):
+class CourseTimetable(Base):
     __tablename__ = "course_timetable"
 
     id = Column(Integer, primary_key=True)

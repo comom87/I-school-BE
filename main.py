@@ -15,6 +15,8 @@ from sqlalchemy import and_, or_
 from domain.timetable import timetable_router
 from utils import UvicornException, http_exception_handler
 
+from domain.course_review import course_review_router
+
 app = FastAPI()
 
 origins = [
@@ -31,6 +33,7 @@ app.add_middleware(
 
 
 app.include_router(timetable_router.router)
+app.include_router(course_review_router.router)
 
 app.add_exception_handler(UvicornException, http_exception_handler)
 

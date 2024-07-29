@@ -55,7 +55,7 @@ class Course(Base):
 class Timetable(Base):
     __tablename__ = "timetable"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
     name = Column(String, nullable=False)
 

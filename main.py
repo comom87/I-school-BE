@@ -38,13 +38,3 @@ app.include_router(course_review_router.router)
 app.add_exception_handler(UvicornException, http_exception_handler)
 
 session = SessionLocal()
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/hello/{name}")
-async def say_hello_name(name: str):
-    return {"message": f"Hello {name}"}

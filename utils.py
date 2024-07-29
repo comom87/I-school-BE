@@ -5,8 +5,6 @@ from typing import Optional, Any, Union
 from pydantic import BaseModel
 from starlette.responses import JSONResponse
 
-from domain.timetable.timetable_schema import CourseTimetable
-
 
 class Response(BaseModel):
     success: bool

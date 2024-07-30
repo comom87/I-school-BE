@@ -1,6 +1,6 @@
 from fastapi import Request
 
-from typing import Optional, Any, Union
+from typing import Optional, Any
 
 from pydantic import BaseModel
 from starlette.responses import JSONResponse

@@ -5,7 +5,8 @@ from utils import UvicornException
 
 from domain.course import course_schema
 
-def read_courses(major: str, keyword: str, grade: str, db: Session):
+
+def read_courses(major: str, keyword: str, grade: int, db: Session):
     query = db.query(
         func.array_agg(Course.id).label('id'),
         Course.code,
@@ -38,7 +39,8 @@ def read_courses(major: str, keyword: str, grade: str, db: Session):
         query = query.filter(Course.grade == grade)
 
     # 그룹화 및 쿼리 실행
-    query = query.group_by(Course.code, Course.name, Course.professor, Course.grade, Course.credit, Course.course_room, Course.rating)
+    query = query.group_by(Course.code, Course.name, Course.professor, Course.grade, Course.credit, Course.course_room,
+                           Course.rating)
     courses = query.all()
 
     # 오류 메시지 반환

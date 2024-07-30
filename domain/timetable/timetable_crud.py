@@ -5,8 +5,7 @@ from fastapi import Body
 from models import Timetable, CourseTimetable, Course
 from domain.timetable import timetable_schema
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 
 from utils import UvicornException
 
@@ -16,22 +15,40 @@ def read_course_to_timetable(timetable_id: int, db: Session):
     if not timetable:
         raise UvicornException(status_code=400, message="시간표가 존재하지 않습니다.")
 
-    course_timetables = db.query(CourseTimetable).filter(CourseTimetable.timetable_id == timetable_id).all()
-    courses = []
-    for course_timetable in course_timetables:
-        course = db.query(Course).filter(Course.id == course_timetable.course_id).first()
-        courses.append(course)
+    courses = db.query(
+        func.array_agg(Course.id).label('id'),
+        Course.code,
+        Course.name,
+        Course.professor,
+        Course.major,
+        func.array_agg(Course.day).label('day'),
+        func.array_agg(Course.start_time).label('start_time'),
+        func.array_agg(Course.end_time).label('end_time'),
+        Course.course_room,
+    ).join(
+        CourseTimetable, CourseTimetable.course_id == Course.id
+    ).filter(
+        CourseTimetable.timetable_id == timetable_id
+    ).group_by(
+        Course.code,
+        Course.name,
+        Course.professor,
+        Course.major,
+        Course.course_room
+    ).all()
 
     data = timetable_schema.CourseTimetableResponse(
-        timetableName=timetable.name,
+        timetable_name=timetable.name,
         courses=[timetable_schema.CourseResponse(
-            courseCode=course.code,
-            courseName=course.name,
+            course_id=course.id,
+            course_code=course.code,
+            course_name=course.name,
             professor=course.professor,
-            courseRoom=course.course_room,
-            courseDay=course.day,
-            courseStartTime=course.start_time,
-            courseEndTime=course.end_time
+            major=course.major,
+            course_room=course.course_room,
+            course_day=course.day,
+            course_start_time=course.start_time,
+            course_end_time=course.end_time
         ) for course in courses]
     )
     return data
@@ -49,11 +66,10 @@ def create_course_to_timetable(timetable_id: int, request: timetable_schema.Cour
     for course in courses:
         new_course = CourseTimetable(
             timetable=timetable,
-            course_id=course.id
+            course=course
         )
         db.add(new_course)
         db.commit()
-    return None
 
 
 def delete_course_from_timetable(timetable_id: int, request: timetable_schema.CourseRequest, db: Session):
@@ -66,7 +82,7 @@ def delete_course_from_timetable(timetable_id: int, request: timetable_schema.Co
         raise UvicornException(status_code=400, message="강의가 존재하지 않습니다.")
 
     for course in courses:
-        course_timetable = db.query(CourseTimetable).filter(and_(CourseTimetable.timetable_id == timetable_id, CourseTimetable.course_id == course.id)).first()
+        course_timetable = db.query(CourseTimetable).filter(
+            and_(CourseTimetable.timetable_id == timetable_id, CourseTimetable.course_id == course.id)).first()
         db.delete(course_timetable)
         db.commit()
-    return None

@@ -1,21 +1,12 @@
-from typing import Optional, Any
-
-from fastapi import FastAPI, Query, Body, Request
-from pydantic import BaseModel
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.responses import JSONResponse
-
-from models import *
-from domain.timetable import timetable_schema
+from fastapi import FastAPI
 from database import SessionLocal
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import and_, or_
 
 from domain.timetable import timetable_router
 from utils import UvicornException, http_exception_handler
 
 from domain.course_review import course_review_router
+from domain.course import course_router
 
 app = FastAPI()
 
@@ -32,19 +23,10 @@ app.add_middleware(
 )
 
 
+app.include_router(course_router.router)
 app.include_router(timetable_router.router)
 app.include_router(course_review_router.router)
 
 app.add_exception_handler(UvicornException, http_exception_handler)
 
 session = SessionLocal()
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/hello/{name}")
-async def say_hello_name(name: str):
-    return {"message": f"Hello {name}"}

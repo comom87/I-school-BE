@@ -1,6 +1,4 @@
-import uuid
-
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Time
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Time, Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -28,7 +26,7 @@ class CourseReview(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
     course_id = Column(Integer, ForeignKey("course.id"), nullable=False)
-    rating = Column(Integer, nullable=False)
+    rating = Column(Float, nullable=False)
     content = Column(String, nullable=False)
 
     user = relationship("User", back_populates="course_review")
@@ -48,6 +46,7 @@ class Course(Base):
     start_time = Column(Time, nullable=False)
     end_time = Column(Time, nullable=False)
     course_room = Column(String, nullable=False)
+    rating = Column(Float, nullable=False, default=0)
 
     course_review = relationship("CourseReview", back_populates="course")
     course_timetable = relationship("CourseTimetable", back_populates="course")
@@ -55,7 +54,7 @@ class Course(Base):
 class Timetable(Base):
     __tablename__ = "timetable"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("user.id"), nullable=False)
     name = Column(String, nullable=False)
 

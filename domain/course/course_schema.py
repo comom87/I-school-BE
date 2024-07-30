@@ -1,19 +1,22 @@
-from pydantic import BaseModel
-from typing import List, Optional
+import datetime
 
-class Course(BaseModel):
-    courseCode: str
-    courseName: str
+from pydantic import BaseModel
+from typing import Optional
+
+
+class CourseResponse(BaseModel):
+    course_id: list[int]
+    course_code: str
+    course_name: str
     professor: str
     grade: int
     credit: int
-    courseDay: list[str]
-    courseStartTime: list[str]
-    courseEndTime: list[str]
-    courseRoom: str
-    rating: Optional[float]
+    course_day: list[str]
+    course_start_time: list[datetime.time]
+    course_end_time: list[datetime.time]
+    course_room: str
+    rating: float
 
-class Courses(BaseModel):
-    success: bool
-    data: Optional[List[Course]]
-    error: Optional[str]
+
+class CoursesResponse(BaseModel):
+    courses: list[CourseResponse]

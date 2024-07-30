@@ -1,21 +1,21 @@
-# schema: api 명세서를 가지고 필요한 재료들을 채워넣는 것
+from pydantic import BaseModel, Field
 
-import datetime
 
-from pydantic import BaseModel, field_validator
-from sqlalchemy import UUID
-
-class CourseReview(BaseModel):
-    courseId: int
+class CourseReviewResponse(BaseModel):
+    course_id: int
     rating: float
     content: str
 
-class CourseReviews(BaseModel):
-    courseName: str
-    courseReviews: list[CourseReview]
 
-class CourseReview(BaseModel):
-    userId: UUID
-    courseId: int
-    rating: int
-    content: str
+class CourseReviewsResponse(BaseModel):
+    course_name: str
+    course_reviews: list[CourseReviewResponse]
+
+
+class CourseReviewRequest(BaseModel):
+    course_id: int = Field(..., alias="courseId")
+    rating: int = Field(..., alias="rating")
+    content: str = Field(..., alias="content")
+
+    class Config:
+        populate_by_name = True

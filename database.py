@@ -1,14 +1,14 @@
-import contextlib
-
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-username = "ischoolbe"
-password = "ischoolbe"
-host = "localhost"
-port = 5432
-database_name = "ischool"
+import os
+
+username = os.getenv('username')
+password = os.getenv('password')
+host = os.getenv('host')
+port = os.getenv('port')
+database_name = os.getenv('database_name')
 
 SQLALCHEMY_DATABASE_URL = f"postgresql://{username}:{password}@{host}:{port}/{database_name}"
 

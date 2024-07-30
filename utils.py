@@ -20,4 +20,4 @@ class UvicornException(Exception):
 
 async def http_exception_handler(request: Request, exception: UvicornException):
     return JSONResponse(status_code=exception.status_code,
-                        content=Response(success=False, data=None, error=exception.message))
+                        content=Response(success=False, data=None, error=exception.message).model_dump())

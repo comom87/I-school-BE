@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, func
 
 from utils import UvicornException
+from sqlalchemy.exc import SQLAlchemyError
 
 
 def read_course_to_timetable(timetable_id: int, db: Session):
@@ -90,12 +91,27 @@ def create_course_to_timetable(timetable_id: int, request: timetable_schema.Cour
         raise UvicornException(status_code=400, message="강의가 존재하지 않습니다.")
 
     for course in courses:
+        
+        check = db.query(CourseTimetable).filter(
+            and_(
+                CourseTimetable.timetable_id == timetable_id,
+                CourseTimetable.course_id == course.id
+            )
+        ).all()
+
+        if check:
+            raise UvicornException(status_code=400, message="이미 존재하는 강의입니다.")
+
         new_course = CourseTimetable(
-            timetable=timetable,
-            course=course
+            timetable_id=timetable_id,
+            course_id=course.id
         )
-        db.add(new_course)
-        db.commit()
+        try :
+            db.add(new_course)
+            db.commit()
+        except SQLAlchemyError as e:
+            raise UvicornException(status_code=400, message="강의 추가중 오류 발생.")
+            
 
 
 def delete_course_from_timetable(timetable_id: int, request: timetable_schema.CourseRequest, db: Session):
@@ -109,6 +125,13 @@ def delete_course_from_timetable(timetable_id: int, request: timetable_schema.Co
 
     for course in courses:
         course_timetable = db.query(CourseTimetable).filter(
-            and_(CourseTimetable.timetable_id == timetable_id, CourseTimetable.course_id == course.id)).first()
-        db.delete(course_timetable)
-        db.commit()
+            and_(CourseTimetable.timetable_id == timetable_id, 
+                 CourseTimetable.course_id == course.id)).first()
+        
+        try :
+            db.delete(course_timetable)
+            db.commit()
+
+        except SQLAlchemyError as e:
+            raise UvicornException(status_code=400, message="강의 삭제중 오류 발생.")
+    
